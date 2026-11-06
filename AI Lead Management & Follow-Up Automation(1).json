@@ -1,0 +1,897 @@
+{
+  "name": "AI Lead Management & Follow-Up Automation",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "d6c36861-3e43-4d3d-85ba-8e63ca643c99",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.2,
+      "position": [
+        -112,
+        32
+      ],
+      "id": "be1b4bee-220a-4432-91dc-b6da75761ed4",
+      "name": "Webhook",
+      "webhookId": "d6c36861-3e43-4d3d-85ba-8e63ca643c99"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "86dd3faf-7524-45c8-b54f-3bd1c081a15c",
+              "name": "name",
+              "value": "={{ $json.body.name }}",
+              "type": "string"
+            },
+            {
+              "id": "636a043a-452a-4122-97c2-ecc821bbe777",
+              "name": "email",
+              "value": "={{ $json.body.email }}",
+              "type": "string"
+            },
+            {
+              "id": "793cf011-14ce-4c09-b092-e673622b6218",
+              "name": "company",
+              "value": "={{ $json.body.company }}",
+              "type": "string"
+            },
+            {
+              "id": "92d63784-cb8c-4e9b-99bf-dfcb56a9ce54",
+              "name": "service",
+              "value": "={{ $json.body.service }}",
+              "type": "string"
+            },
+            {
+              "id": "c8d5d36a-bf5f-4c76-be04-cfd4e1c41ff6",
+              "name": "budget",
+              "value": "={{ $json.body.budget }}",
+              "type": "number"
+            },
+            {
+              "id": "d9b7fb43-f18d-456c-8b99-46b4ca09ea10",
+              "name": "message",
+              "value": "={{ $json.body.message }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1008,
+        32
+      ],
+      "id": "86532e31-f905-4607-a784-89b07d8a8e89",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "e7657130-7376-40c3-b96d-550e1fe867cd",
+              "leftValue": "={{ $json.name }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "da86b9d2-b5d7-4919-a566-311be9793bef",
+              "leftValue": "={{ $json.email }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "078a34a0-1236-433b-a893-0ebd33d61b07",
+              "leftValue": "={{ $json.message }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1232,
+        32
+      ],
+      "id": "37329206-2967-4e59-8ea4-f9949d107898",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst lead = $json;\n\nlet score = 0;\n\n// 1. Budget scoring\nconst budget = Number(lead.budget) || 0;\n\nif (budget >= 2000) {\n  score += 40;\n} else if (budget >= 1000) {\n  score += 25;\n} else if (budget > 0) {\n  score += 10;\n}\n\n// 2. Message quality\nif (lead.message && lead.message.trim().length >= 30) {\n  score += 20;\n}\n\n// 3. Contact information\nif (lead.name && lead.email) {\n  score += 20;\n}\n\n// 4. Service requirement\nif (lead.service && lead.service.trim().length > 0) {\n  score += 20;\n}\n\n// Determine priority\nlet priority = \"Low\";\n\nif (score >= 70) {\n  priority = \"High\";\n} else if (score >= 40) {\n  priority = \"Medium\";\n}\n\nreturn {\n  ...lead,\n  leadScore: score,\n  priority: priority,\n  status: \"New\",\n  createdAt: new Date().toISOString()\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1456,
+        -64
+      ],
+      "id": "e68c82fa-fad2-4688-8903-20438ee13d2e",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "y6Yn5bshYiSQ8HBa",
+          "mode": "list",
+          "cachedResultName": "leads",
+          "cachedResultUrl": "/projects/yb7konyCHY8ZG7Ih/datatables/y6Yn5bshYiSQ8HBa"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "name": "={{ $json.name }}",
+            "email": "={{ $json.email }}",
+            "company": "={{ $json.company }}",
+            "service": "={{ $json.service }}",
+            "budget": "={{ $json.budget }}",
+            "message": "={{ $json.message }}",
+            "leadScore": "={{ $json.leadScore }}",
+            "priority": "={{ $json.priority }}",
+            "status": "={{ $json.status }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "company",
+              "displayName": "company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "service",
+              "displayName": "service",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "budget",
+              "displayName": "budget",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "message",
+              "displayName": "message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "leadScore",
+              "displayName": "leadScore",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "priority",
+              "displayName": "priority",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        2080,
+        176
+      ],
+      "id": "b3cde316-8b8f-41f4-9983-832a18356247",
+      "name": "Insert row"
+    },
+    {
+      "parameters": {
+        "operation": "rowNotExists",
+        "dataTableId": {
+          "__rl": true,
+          "value": "y6Yn5bshYiSQ8HBa",
+          "mode": "list",
+          "cachedResultName": "leads",
+          "cachedResultUrl": "/projects/yb7konyCHY8ZG7Ih/datatables/y6Yn5bshYiSQ8HBa"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "=email",
+              "keyValue": "={{ $json.email }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1856,
+        112
+      ],
+      "id": "db11b5e4-a7fa-4691-a46e-d663311709fa",
+      "name": "If row does not exist"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({\n  success: true,\n  message: \"Lead saved successfully\",\n  email: $('Code in JavaScript').item.json.email,\n  leadScore: $('Code in JavaScript').item.json.leadScore,\n  priority: $('Code in JavaScript').item.json.priority\n}) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        2272,
+        -32
+      ],
+      "id": "b757258e-c1ee-4068-9417-9c1d56177b98",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "operation": "rowExists",
+        "dataTableId": {
+          "__rl": true,
+          "value": "y6Yn5bshYiSQ8HBa",
+          "mode": "list",
+          "cachedResultName": "leads",
+          "cachedResultUrl": "/projects/yb7konyCHY8ZG7Ih/datatables/y6Yn5bshYiSQ8HBa"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "email",
+              "keyValue": "={{ $json.email }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1712,
+        -64
+      ],
+      "id": "58baf6cc-4dce-48d5-930a-e8b1738b1f26",
+      "name": "If row exists",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({\n  success: false,\n  message: \"Lead already exists\",\n  email: $json.email\n}) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1904,
+        -80
+      ],
+      "id": "f092073f-487f-4054-bd59-548597656a3a",
+      "name": "Respond to Webhook1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "b7c0040f-375d-46da-aabc-71f6e049f3f5",
+              "leftValue": "={{$json.body.name}}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "aff50581-2f6e-415b-a2c6-a34b66d2d5d5",
+              "leftValue": "={{ /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test($json.body.email || '') }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "dc098a6b-d097-411e-8473-9e1baf29641e",
+              "leftValue": "{{$json.body.service}}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        128,
+        0
+      ],
+      "id": "b5043158-ab69-4e30-a734-5281e6725f8c",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1__b7JNV02JU2gH8SWb1JHDHqewjD_dakYq00kTcDEME",
+          "mode": "list",
+          "cachedResultName": "Nexora Lead Management",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1__b7JNV02JU2gH8SWb1JHDHqewjD_dakYq00kTcDEME/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "leads",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1__b7JNV02JU2gH8SWb1JHDHqewjD_dakYq00kTcDEME/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "email",
+              "lookupValue": "={{ $('Webhook').first().json.body.email }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        384,
+        -48
+      ],
+      "id": "5be05303-5c18-4287-8e1a-e52a55c354b7",
+      "name": "Get row(s) in sheet",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "GhJECbtZgerUwumg",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "976f7940-c9a2-4d9f-97e1-565b2561fd80",
+              "leftValue": "={{$json.row_number}}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        544,
+        16
+      ],
+      "id": "05aec7ca-e0e2-41a6-8801-6d83c138e95f",
+      "name": "If2"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-3.5-flash-lite",
+          "mode": "list",
+          "cachedResultName": "models/gemini-3.5-flash-lite"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=You are an AI sales qualification assistant for Nexora.\n\nYour task is to analyze a customer lead and classify its purchase intent using only the information provided.\n\nLead information:\nName: {{ $('Webhook').first().json.body.name || \"Not provided\" }}\nCompany: {{ $('Webhook').first().json.body.company || \"Not provided\" }}\nService: {{ $('Webhook').first().json.body.service || \"Not provided\" }}\nBudget: {{ $('Webhook').first().json.body.budget || \"Not provided\" }}\nMessage: {{ $('Webhook').first().json.body.message || \"Not provided\" }}\n\nClassification rules:\n\n1. Hot:\n- The lead explicitly wants to buy or start soon.\n- The lead communicates urgent business needs.\n- The lead provides a clear budget and a specific service requirement.\n\n2. Warm:\n- The lead describes a genuine business need.\n- The lead asks about a specific service or requests more information.\n- Buying intent exists, but urgency or budget is unclear.\n\n3. Cold:\n- The message is generic or exploratory.\n- The lead shows little clear buying intent.\n- Essential business needs are unclear.\n\nPriority mapping:\n- Hot = High\n- Warm = Medium\n- Cold = Low\n\nImportant rules:\n- Never invent missing company details, budgets, deadlines, or customer intentions.\n- Use the customer's actual message as the main evidence.\n- If information is insufficient, prefer Cold and explain the uncertainty.\n- Keep the reason short, specific, and evidence-based.\n\nReturn one valid JSON object only.\nDo not use Markdown or code fences.\nUse exactly these three keys:\n{\n  \"classification\": \"Hot, Warm, or Cold\",\n  \"priority\": \"High, Medium, or Low\",\n  \"reason\": \"A concise explanation based on the available information\"\n}\n"
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        464,
+        368
+      ],
+      "id": "9021c34f-8d3b-4308-b24b-d6d192e90e8d",
+      "name": "Message a model",
+      "retryOnFail": true,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "XEmXiQ45fLDjCgxS",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "1870005696",
+        "text": "=🚀 New Nexora Lead  Name: {{$json.name}} Email: {{$json[\"email\"]}}  Company: {{$json.company}} Service: {{$json.service}} Budget: {{$json.budget}}  Classification: {{$json.classification}} Priority: {{$json.priority}} Reason: {{$json.reason}}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1088,
+        160
+      ],
+      "id": "32a5965a-be27-4bb8-99ab-233da573e08f",
+      "name": "Send a text message",
+      "webhookId": "f0b59908-d9d4-4215-8142-77de804688b7",
+      "credentials": {
+        "telegramApi": {
+          "id": "bsqkIufHIMGeYEZy",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1__b7JNV02JU2gH8SWb1JHDHqewjD_dakYq00kTcDEME",
+          "mode": "list",
+          "cachedResultName": "Nexora Lead Management",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1__b7JNV02JU2gH8SWb1JHDHqewjD_dakYq00kTcDEME/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "leads",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1__b7JNV02JU2gH8SWb1JHDHqewjD_dakYq00kTcDEME/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "company": "={{$('Webhook').item.json.body.company}}",
+            "service": "={{$('Webhook').item.json.body.service}}",
+            "name": "={{$('Webhook').item.json.body.name}}",
+            "budget": "={{$('Webhook').item.json.body.budget}}",
+            "message": "={{$('Webhook').item.json.body.message}}",
+            "classification": "={{ JSON.parse($('Message a model').first().json.content.parts[0].text).classification }}",
+            "priority": "={{ JSON.parse($('Message a model').first().json.content.parts[0].text).priority }}",
+            "reason": "={{ JSON.parse($('Message a model').first().json.content.parts[0].text).reason }}",
+            "email": "={{$('Webhook').item.json.body.email}}"
+          },
+          "matchingColumns": [
+            "email "
+          ],
+          "schema": [
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "company",
+              "displayName": "company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "service",
+              "displayName": "service",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "budget",
+              "displayName": "budget",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "message",
+              "displayName": "message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "classification",
+              "displayName": "classification",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "priority",
+              "displayName": "priority",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "reason",
+              "displayName": "reason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "follow_up_status",
+              "displayName": "follow_up_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "last_contacted_at",
+              "displayName": "last_contacted_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "next_follow_up_at",
+              "displayName": "next_follow_up_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        816,
+        112
+      ],
+      "id": "bf44bffc-8fc1-42a3-bce7-ccf2ed67bc4c",
+      "name": "Append row in sheet",
+      "retryOnFail": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "GhJECbtZgerUwumg",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "If row exists",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "If row does not exist",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert row": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If row does not exist": {
+      "main": [
+        [
+          {
+            "node": "Insert row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If row exists": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Webhook": {
+      "main": [
+        []
+      ]
+    },
+    "Respond to Webhook1": {
+      "main": [
+        []
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false,
+    "errorWorkflow": "NbrGD6FtuLQ6o6Vq"
+  },
+  "versionId": "4dc9e9c5-4605-41a1-8775-495a0f498861",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "435d15f75361234ec9784fb2f2ec48ddd00149bf0a735aa7aeb461e46d33de9b"
+  },
+  "nodeGroups": [],
+  "id": "Avwt5T6aKyA5S18x",
+  "tags": []
+}
